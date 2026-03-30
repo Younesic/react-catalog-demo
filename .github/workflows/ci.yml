@@ -7,7 +7,7 @@ on:
 
 env:
   COMPONENT_NAME: react-catalog-demo
-  HARBOR_PROJECT: platform
+  HARBOR_PROJECT: cib
 
 
 
