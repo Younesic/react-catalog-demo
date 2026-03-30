@@ -9,9 +9,7 @@ env:
   COMPONENT_NAME: react-catalog-demo
   HARBOR_PROJECT: platform
 
-defaults:
-  run:
-    working-directory: catalog-ci-samples/react-catalog-demo
+
 
 jobs:
   # ──────────────────────────────────────────────────────────────
@@ -27,7 +25,7 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-          cache-dependency-path: catalog-ci-samples/react-catalog-demo/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci || npm install
@@ -71,7 +69,7 @@ jobs:
       - name: Build & Push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: catalog-ci-samples/react-catalog-demo
+          context: .
           push: true
           tags: |
             ${{ secrets.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.COMPONENT_NAME }}:${{ steps.meta.outputs.short_sha }}
@@ -94,27 +92,24 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-          cache-dependency-path: catalog-ci-samples/react-catalog-demo/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: catalog-ci-samples/react-catalog-demo
         run: npm ci || npm install
 
       - name: Generate CycloneDX SBOM
-        working-directory: catalog-ci-samples/react-catalog-demo
         run: |
           npx -y @cyclonedx/cyclonedx-npm --output-file bom.json --spec-version 1.5
 
       - name: Upload BOM to Dependency-Track
         id: dtrack
-        working-directory: catalog-ci-samples/react-catalog-demo
         env:
           DTRACK_BASE_URL: ${{ secrets.DTRACK_BASE_URL }}
           DTRACK_API_KEY: ${{ secrets.DTRACK_API_KEY }}
           PROJECT_NAME: ${{ env.COMPONENT_NAME }}
           PROJECT_VERSION: ${{ github.sha }}
           SBOM_PATH: bom.json
-        run: node ../../scripts/dependency-track.mjs
+        run: node scripts/dependency-track.mjs
 
   # ──────────────────────────────────────────────────────────────
   # 4. ArgoCD Check (dev)
@@ -141,7 +136,7 @@ jobs:
           ARGOCD_BASE_URL: ${{ secrets.ARGOCD_BASE_URL }}
           ARGOCD_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
           COMPONENT_NAME: ${{ env.COMPONENT_NAME }}
-        run: node catalog-ci-samples/scripts/argocd-check.mjs
+        run: node scripts/argocd-check.mjs
 
   # ──────────────────────────────────────────────────────────────
   # 5. Backstage Catalog PR
@@ -170,4 +165,4 @@ jobs:
           IMAGE_REF: ${{ needs.container_publish.outputs.image_ref }}
           ARGOCD_APP_NAME_DEV: ${{ needs.argocd_check.outputs.argocd_app_name_dev }}
           ARGOCD_APP_URL_DEV: ${{ needs.argocd_check.outputs.argocd_app_url_dev }}
-        run: node catalog-ci-samples/scripts/trigger-backstage-catalog.mjs
+        run: node scripts/trigger-backstage-catalog.mjs
