@@ -11,7 +11,14 @@
     "test": "vitest run"
   },
   "backstage": {
-    "ownerGroupRef": "group:default/team-cib"
+    "ownerGroupRef": "group:default/team-cib",
+    "component": {
+      "name": "react-catalog-demo",
+      "ref": "component:default/react-catalog-demo",
+      "owner": "group:default/team-cib",
+      "type": "service",
+      "lifecycle": "experimental"
+    }
   },
   "dependencies": {
     "react": "^18.3.1",
